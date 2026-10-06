@@ -11,12 +11,8 @@
  * 对象"，在宿主渲染时抛 React #130（slot entry crashed），页面空白。
  * 同时把与官方「插件」页重名的 label 改为「插件管理」。
  */
-import type { SlotsService } from '@deepseek-ai/dsh-client-ui-slots'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import { createElement, useEffect, useRef } from 'react'
-
-type ClientContext = {
-  slots: SlotsService
-}
 
 export const inject = ['slots']
 

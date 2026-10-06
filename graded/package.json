@@ -6,10 +6,8 @@
   "private": false,
   "type": "module",
   "main": "./lib/index.js",
-  "types": "./lib/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
     "./client": {
@@ -25,11 +23,12 @@
     "docs",
     "cordis.patch.yml"
   ],
-  "engines": {
-    "dsh": ">=0.0.1-rc"
-  },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.2"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2"
   },
   "dsh": {
     "bundle": {
@@ -43,6 +42,6 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/mode-state.test.mjs tests/tools.test.mjs tests/inject-text.test.mjs"
+    "test": "node --test tests/mode-state.test.mjs tests/tools.test.mjs tests/inject-text.test.mjs tests/w11-lifecycle-request.test.mjs"
   }
 }

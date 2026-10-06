@@ -55,9 +55,9 @@ test('issue #13: sessionMode skips plugin-origin messages when pinning the band'
   // 真实链路上首条落库的 user/message 常常是插件注入的（approval 通知、
   // runtime-context 快照、agent-instructions、router 引导），它们不能参与分类。
   const buildTask = { kind: 'user', source: { kind: 'user' }, content: [{ type: 'text', text: '从零开发一个马里奥网页游戏' }] }
-  const approval = { kind: 'user', source: { kind: 'plugin', plugin: 'user-approval' }, content: [{ type: 'text', text: 'The approval policy changed from "ask" to "never"' }] }
-  const snapshot = { kind: 'user', source: { kind: 'plugin', plugin: 'runtime-context' }, content: [{ type: 'text', text: 'cwd snapshot' }] }
-  const guide = { id: 'router-guide-x', kind: 'user', source: { kind: 'plugin', plugin: 'router-bootstrap' }, content: [{ type: 'text', text: 'Router: classify this task now' }] }
+  const approval = { kind: 'user', source: { kind: 'plugin:user-approval' }, content: [{ type: 'text', text: 'The approval policy changed from "ask" to "never"' }] }
+  const snapshot = { kind: 'user', source: { kind: 'plugin:runtime-context' }, content: [{ type: 'text', text: 'cwd snapshot' }] }
+  const guide = { id: 'router-guide-x', kind: 'user', source: { kind: 'plugin:router-bootstrap' }, content: [{ type: 'text', text: 'Router: classify this task now' }] }
   // 插件消息在前、真实用户消息在后 → 必须按真实消息分类（react）
   assert.equal(sessionMode({ events: [
     { type: 'user/message', data: approval },

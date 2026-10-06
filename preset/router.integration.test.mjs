@@ -23,6 +23,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { apply as applyStandard } from './router-standard/router-bootstrap-v34.mjs' // v1.18.3：测试面=运行面（agent.cordis.yml 挂载 -v34）
 import { apply as applySpec } from './router-spec/router-bootstrap-v10.mjs' // v1.18.3: 测试面=运行面（agent.cordis.yml 挂载 -v10）
+import { apply as applyReact } from './router-react/router-bootstrap-v17.mjs'
 import { classifyTask, sessionMode } from './router-standard/router-core.mjs'
 
 // ── minimal Cordis-shaped context ──────────────────────────────────────────
@@ -143,7 +144,7 @@ test('phase_begin injects the bootstrap guide exactly once and persists guided (
   const first = await begin.execute()
   assert.match(String(first), /session started/)
   assert.equal(appends.length, 1, 'bootstrap guide appended once')
-  assert.equal(appends[0].source.plugin, 'router-bootstrap')
+  assert.equal(appends[0].source.kind, 'plugin:router-bootstrap')
   assert.match(appends[0].content[0].text, /Bootstrap \(once per session\)/)
   const again = await begin.execute()
   assert.match(String(again), /already started/)
@@ -157,7 +158,7 @@ test('phase_begin injects the bootstrap guide exactly once and persists guided (
 test('plugin-origin claimed messages never pin the band or receive guides', async () => {
   const h = makeHarness(applyStandard, {})
   const session = makeSession()
-  const approval = { id: 'a1', role: 'user', source: { kind: 'plugin', plugin: 'user-approval' }, content: [{ type: 'text', text: 'The approval policy changed from "ask" to "never"' }] }
+  const approval = { id: 'a1', role: 'user', source: { kind: 'plugin:user-approval' }, content: [{ type: 'text', text: 'The approval policy changed from "ask" to "never"' }] }
   const agent = { session, options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }
   h.agentRef.current = agent
   // Real chain: next-step plugin messages are claimed BEFORE the next-turn user message.
@@ -373,6 +374,69 @@ test('spec preset (routerMode: spec): classified persona over the full section l
   assert.deepEqual(assembled.tools.map((t) => t.name), ['pwsh', 'read', 'write', 'edit'])
 })
 
+// ── host-plane robustness: sessions without a live `events` array ───────────
+
+test('spec preset: a session with no events array must not crash the assemble chain', async () => {
+  // Regression: router-spec read `session.events.some(...)` directly, so a host
+  // plane whose session exposes no `events` array (lazy snapshot / capture-only)
+  // threw "Cannot read properties of undefined (reading 'some')" on every turn.
+  // router-standard guarded this with sessionEvents(); router-spec now does too.
+  const h = makeHarness(applySpec, { routerMode: 'spec' })
+  const session = { id: 'no-events-session', header: {} } // deliberately NO `events`
+  const agent = { session, options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }
+  h.agentRef.current = agent
+  h.emit('agent/inbox/claimed', { agent, message: userMessage('m20', '修复这个仓库里的 bug') })
+  const assembled = await h.assemble(baseAssembled(), { agent, scope: agent })
+  assert.match(assembled.sections.find((s) => s.name === 'router-persona').text, /software engineer/)
+})
+
+test('spec preset: weak-band pre-step must not crash when the session has no events array', async () => {
+  const h = makeHarness(applySpec, { routerMode: 'spec' })
+  const session = { id: 'no-events-session-2', header: {} } // deliberately NO `events`
+  const agent = { session, options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }
+  h.agentRef.current = agent
+  const m = userMessage('m21', '今天天气怎么样') // unmatched → weak band
+  h.emit('agent/inbox/claimed', { agent, message: m })
+  const decision = await h.preStep({ agent, messages: [m], turn: 1, step: 1 })
+  assert.ok(decision.messages.some((x) => x.id === 'router-guide-m21'), 'guide still injected without session.events')
+})
+
+test('react preset: a session with no events array must not crash the assemble chain', async () => {
+  // Same host-plane guard as router-spec; router-react also used to read
+  // `session.events.some(...)` directly (and to reference an unimported
+  // `extractText` from its inbox/claimed handler).
+  const h = makeHarness(applyReact, {})
+  const session = { id: 'react-no-events-session', header: {} } // deliberately NO `events`
+  const agent = { session, options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }
+  h.agentRef.current = agent
+  h.emit('agent/inbox/claimed', { agent, message: userMessage('m22', '修复这个仓库里的 bug') })
+  const assembled = await h.assemble(baseAssembled(), { agent, scope: agent })
+  assert.ok(assembled.sections.some((s) => s.name === 'router-persona'), 'persona applied without crashing')
+})
+
+test('react preset: weak-band guidance fires (raw first-user text must not pin every session to spec)', async () => {
+  // Regression: lines 92/173 fed the RAW first-user text straight into
+  // bandOf(). clamp01(Number(text) || 0) is always 0 → 'spec' for every text,
+  // so `if (bandOf(mode) !== 'weak') return` made weak guidance dead code.
+  // currentMode() classifies the text instead (see its doc comment).
+  const h = makeHarness(applyReact, { routerMode: 'spec' })
+  const session = makeSession()
+  const appends = []
+  const agent = {
+    session,
+    options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
+    inbox: { append(_k, m) { appends.push(m) } },
+  }
+  h.agentRef.current = agent
+  const m = userMessage('rw1', '今天天气怎么样') // unmatched → weak band
+  h.emit('session/event', session, { type: 'user/message', data: m })
+  await new Promise((r) => setTimeout(r, 5)) // let queueMicrotask flush
+  assert.equal(appends.length, 1, 'weak guidance must be queued for an unmatched task')
+  assert.equal(appends[0].source.kind, 'plugin:router-bootstrap')
+  assert.ok(!('plugin' in appends[0].source), 'v4 messages must not use the retired plugin wrapper')
+  assert.match(appends[0].content[0].text, /classify this task/)
+})
+
 // ── resume safety ──────────────────────────────────────────────────────────
 
 test('resume: a guide already in the durable transcript is never injected twice', async () => {
@@ -380,7 +444,7 @@ test('resume: a guide already in the durable transcript is never injected twice'
   const m = userMessage('m9', '今天天气怎么样')
   const session = makeSession([
     { type: 'user/message', data: m },
-    { type: 'user/message', data: { id: 'router-guide-m9', role: 'user', source: { kind: 'plugin', plugin: 'router-bootstrap' }, content: [{ type: 'text', text: 'guide' }] } },
+    { type: 'user/message', data: { id: 'router-guide-m9', role: 'user', source: { kind: 'plugin:router-bootstrap' }, content: [{ type: 'text', text: 'guide' }] } },
   ])
   const agent = { session, options: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }
   h.agentRef.current = agent

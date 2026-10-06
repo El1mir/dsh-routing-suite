@@ -1,104 +1,236 @@
-# dsh-routing-suite — 注入器 × 思维模式路由 × 分级模式 套装
+# DSH Routing Suite 用户教程
 
-一个仓库装齐三件套：**运行时注入器**（免重启运行时管理层）+
-**思维模式路由预设**（任务感知推理模式，P1-P23 实测）+
-**分级任务协议**（脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。
+DSH Routing Suite 是一套面向 DeepSeek Harness（DSH）的 agent 基础设施套装。它把 **插件生命周期管理、模型工作方式路由、复杂任务规格化交付** 组合在一起。
 
-[中文](README.md) | [English](README.en.md)
-
-## 组件入口（快速跳转）
-
-| 组件 | 说明 | 入口 |
-|---|---|---|
-| **injector** | 运行时注入器：`dev_*` 工具全家桶（注入/热重载/卸载/侧挂转正/路由自愈） | [injector/README.md](injector/README.md) · [文档](injector/docs/SPEC.md) |
-| **preset** | 思维模式路由预设（router-standard / router-spec，按模型 persona 路由） | [preset/README.md](preset/README.md) · [实验报告](preset/docs/experiments.md) |
-| **graded** | 分级模式：会话级两级任务协议（6 工具+三模式+小类模式粒度+红队门+审计端点+超级面板） | [graded/README.md](graded/README.md) · [架构](graded/docs/ARCHITECTURE.md) · [理论](graded/docs/THEORY.md) · [实测数据](graded/docs/DATA.md) |
-
-## 研究与数据（graded）
-
-**"模型也会偷懒——我们测到了，还做了对抗"** —— 分级模式插件的公开研究位：
-- [🔬 模型注意力懈怠：观测笔记](graded/docs/STUDY.md)——长程任务里验证勤勉度衰减的真实分段数据（无协议链晚段"1 工具/0 读图" vs 协议链全程在线）+对抗机制对照
-- [📊 协议 vs 无协议：实测对比](graded/docs/COMPARE.md)——同型 3D 任务三会话对比表+ASCI I 图
-- [🧪 测量工具](graded/scripts/measure.mjs)——`node scripts/measure.mjs 你的会话.jsonl`：任何人可对自己会话复算上述指标（脱敏：只输出数字）
-- [📁 实测数据](graded/docs/DATA.md)——三会话脱敏指标表+懈怠强度表+审计口径
-
-## 一键安装
-
-```powershell
-dsh plugin --profile web add github:yjh051108/dsh-routing-suite
+```text
+injector  →  管插件如何安装、注入、热重载和卸载
+preset    →  管模型采用什么思维/执行方式
+graded    →  管复杂任务如何澄清、计划、执行、审核和验收
 ```
 
-> 本套装已含上述三组件（injector/preset/graded 均为仓库内普通目录，内容直接入库）；
-> graded 发布物：`graded/dsh-external-dsh-graded-mode-0.0.1-rc1.tgz`（或 Release 附件）。
+目标环境：DSH `0.2.0-rc.2`，Node.js `>=22`。
 
-**DSH Target**：`>=0.1.0-rc.6 <0.2.0`（已跟进 rc.8 / 0.1.1-rc.2 / 0.1.2-alpha.1）
+## 1. 三个组件分别做什么
 
-> DSH 目前处于 developer preview，官方明示会有破坏性变更（breaking changes）。
-> 本仓库的版本跟进记录见 `preset/CHANGELOG.md`。
+### `injector`：插件运行时管理器
 
-## 安装链（三步）
+传统插件改完配置后通常需要重启 DSH。`injector` 提供运行时开发通道：把标准插件包直接注入当前运行中的 web，host 工具和 client UI 一起生效。
+
+它适合解决：快速试用新插件、改代码后热重载、失败回滚、干净卸载，以及测试工具不污染正式 tools schema 等问题。
+
+主要工具：
+
+| 工具 | 用途 |
+| --- | --- |
+| `dev_inject_plugin` | 注入本地完整插件包 |
+| `dev_reload_package` | 清缓存、重新加载并重建 fiber；失败回滚旧版本 |
+| `dev_uninject_plugin` | 清理工具、监听器、路由、client 状态并卸载 |
+| `dev_install_package` | 正式写入 profile bundles，重启后恢复 |
+| `dev_plugin_status` / `dev_injected_list` | 查看插件和注入状态 |
+| `dev_clear_routes` | 清除热重载留下的 webserver 孤儿路由 |
+| `dev_stage_add` / `dev_stage_call` | 在后侧测试工具，不进入正式 schema |
+| `dev_stage_promote` / `dev_stage_demote` | 转正或撤回测试工具 |
+
+它还提供插件生产线：
+
+```text
+dev_scaffold_plugin → dev_build_plugin → dev_inject_plugin
+                                      ↘ dev_release_plugin
+```
+
+可生成 `toolkit`、`daemon-loop`、`ui-panel`、`hybrid` 四类骨架；`daemon-loop` 可使用 timer + LLM 运行自主循环。
+
+### `preset`：思维模式路由
+
+`preset` 不是业务工具，而是影响 agent 如何理解任务、组织思路和保持方向的 agent preset。
+
+当前有三个预设：
+
+- **router-standard**：通用主力，负责任务分类、persona 路由、近距离引导和任务锚定；
+- **router-react**：强调“思考 → 行动 → 反馈 → 调整”的循环；
+- **router-spec**：强调规格化、深度推理和交付前审查。
+
+`router-standard` 的主要机制包括：
+
+- 根据任务选择 `spec`、`react`、`mixed` 或 `weak` 行为带；
+- 根据模型类型选择 persona；
+- 从首条真实用户消息开始路由；
+- 在每轮用户消息附近加入引导，减少跑题和上下文稀释；
+- 用回顾、收敛、反跑题三个锚点保持任务方向；
+- 保留 DSH 原有的 plan-mode 边界；
+- 提供 `dev_router_status`、`dev_router_mode`、`dev_mode_subagent` 等调节工具。
+
+预设现在以独立 bundle 包装配，不再使用旧的 `.agent-presets` 目录协议。修改预设并同步快照后，需要重启 DSH 才会被启动时读取。
+
+### `graded`：复杂任务协议
+
+`graded` 把复杂任务从“模型自己说完成了”变成有状态、有规格、有审核、有验收的流程：
+
+```text
+需求脑暴 → 北极星定稿 → L1 组级规格 → L2 小类规格
+→ 完整审核 → 按规格执行 → 打卡 → 组收官 → 终验 → 审计
+```
+
+六个主要工具：
+
+| 工具 | 用途 |
+| --- | --- |
+| `commit_star` | 固化目的、需求、非目标、假设和任务模式 |
+| `edit_plan` | 编写 L1 组规格和 L2 小类规格 |
+| `lock_stage` | 复检并锁定阶段 |
+| `mark_task` | 打卡，作为唯一前进许可 |
+| `redteam_verdict` | 对任务进行 `pass` / `reject` 裁决 |
+| `revise_do` | 修改执行方式并保留修订轨迹 |
+
+关键约束：先澄清歧义；必须选择 `correct`、`experience` 或 `research` 模式；规格缺字段时拒绝写入；设置 `verify=redteam` 的任务未通过红队不能打卡；状态写入磁盘，重启可恢复；提供 `/graded-mode/api/audit` 和三层任务树面板。
+
+## 2. 安装整套能力
+
+### 推荐方式：安装脚本
 
 ```powershell
-# 1. 拉套装（单仓库：injector/preset 内容已直接入库，无需 submodule）
 git clone https://github.com/yjh051108/dsh-routing-suite.git
 cd dsh-routing-suite
-
-# 2. 一键安装（注入器装配 + 预设复制 + 布局自检 + 提示重启）
 .\install.ps1
 ```
 
-或手动：
+安装脚本会装配注入器和三个 router bundle，完成后重启 DSH。
+
+### 手动安装
 
 ```powershell
-# 步骤 1：装配注入器（官方装配，重启后由 bundles 接管）
 dsh plugin --profile web add .\injector
-# dsh 不在 PATH 时：npx '@deepseek-ai/dsh' plugin --profile web add .\injector
-
-# 步骤 2：安装 router 预设（每个预设目录平铺复制到 .agent-presets 下，DSH 只扫一级子目录）
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-standard'
-Copy-Item -Recurse .\preset\router-standard $target
-
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-spec'
-Copy-Item -Recurse .\preset\router-spec $target
-
-# 步骤 3：重启 DSH → 新会话选择 Router Standard / Router Spec (experimental)
+dsh plugin --profile web add .\preset\router-standard\bundle
+dsh plugin --profile web add .\preset\router-react\bundle
+dsh plugin --profile web add .\preset\router-spec\bundle
 ```
 
-> 注意：不要复制 `preset` 整目录（会多套一层，DSH 发现不了预设）。
+如果 `dsh` 不在 PATH：
 
-## 组件
+```powershell
+npx '@deepseek-ai/dsh' plugin --profile web add .\injector
+```
 
-| 路径 | 仓库 | 版本 | 作用 |
-|---|---|---|---|
-| `injector/` | [dsh-super-injector](https://github.com/yjh051108/dsh-super-injector) | [v0.3.3](https://github.com/yjh051108/dsh-super-injector/releases/tag/v0.3.3) | 运行时注入器：dev_* 工具全家桶（注入/热重载/侧挂转正/卸载/路由自愈）；`github:` 装配由 prepare 钩子自动构建 |
-| `preset/` | [dsh-router-standard](https://github.com/yjh051108/dsh-router-standard) | [v0.3.0 … 主线 v1.19.1/v34](https://github.com/yjh051108/dsh-router-standard/releases/tag/v0.3.0) | 思维模式路由预设：router-standard（分类 persona + 完整 sections）/ router-spec（深度思考优先）。router-pro 为规划中（planned），未随 v0.3.0 发布 |
-| `graded/` | [dsh-graded-mode](https://github.com/yjh051108/dsh-routing-suite/tree/main/graded) | [v0.0.1-rc1](https://github.com/yjh051108/dsh-routing-suite/releases/tag/v0.0.1-rc1) | graded 模式：会话级两级任务协议（脑暴选择题对齐 → 北极星定稿 → 规格化计划 → 按规格注入 → 打卡制 → 组收官 → 终验）；6 工具 + 三模式 + 小类模式粒度 + 红队门 + 审计端点；`graded/dsh-graded-mode-3.2.0.tgz` 可直接 `dsh plugin --profile web add` |
+重启 DSH 后，新会话即可选择 `Router Standard`、`Router React` 或 `Router Spec`。
 
-> 版本号以各组件仓库的 git tag 为准（列内链接直达对应 Release）。
+### 安装 `graded`
 
-三个组件随本仓库统一演进（`injector/`、`preset/` 与 `graded/` 已是仓库内普通目录，内容直接入库）；上游独立仓库保留用于独立发布，后续可转镜像/归档。预设安装目录为 `preset/router-standard`（已平铺，无额外嵌套）。
+```bash
+cd graded
+npm install
+node scripts/build.mjs
+# 再将构建目录或 tgz 交给 dsh plugin --profile web add
+```
 
-## router-standard 预设能力（P1-P23 实测摘要）
+也可以直接使用发布的 `graded` tgz 包。安装完成后重启 DSH。
 
-- **三行为带 + weak 内路由**：spec（计划-集体）/ react（执行者）/ mixed（陷阱，回避）/ weak（模型自分类）
-- **按模型选 persona**：Pro=spec 句+few-shot（区分度 +5.0）；Flash=neutral+classify（+5.7）
-- **近距离引导**：每轮用户消息后注入固定引导（缓存 92-94% 命中），路由 96% + 收敛 100% + 反稀释
-- **单任务三锚**（persona 静态）：回顾 + 收敛 + 反跑题 —— 开放任务完成率 0% → 100%
-- **plan-mode 保留**：只替换 persona section，plan 边界不失忆
-- **AI 自优化工具**：`dev_router_status` / `dev_router_mode` / `dev_mode_subagent`
+> 不要把预设复制到 `~/.dsh/.agent-presets/`。当前 harness 已改为通过 Cordis composition 和 profile bundles 注册 preset。
 
-## v0.3.0 变更（真实装配链路修复）
+## 3. 日常使用
 
-- **首轮路由真实生效**（[#13](https://github.com/yjh051108/dsh-routing-suite/issues/13)）：经 `agent/inbox/claimed` 在装配前捕获首条真实用户消息，首个请求即按任务分类（此前所有会话首轮无条件 weak）
-- **近距离引导改走 `agent/pre-step`**（[#34](https://github.com/yjh051108/dsh-routing-suite/issues/34)/[#36](https://github.com/yjh051108/dsh-routing-suite/issues/36)/[#55](https://github.com/yjh051108/dsh-routing-suite/issues/55)）：引导与用户消息同请求注入，真实链路上可达，且不再产生额外的第二次 API 调用（此前每轮多 1 次调用 = 费用 2×）
-- **缺导入修复**（[#11](https://github.com/yjh051108/dsh-routing-suite/issues/11)）、preset.yml YAML 引号（[#53](https://github.com/yjh051108/dsh-routing-suite/issues/53)）、promoted 后完整回归（[#44](https://github.com/yjh051108/dsh-routing-suite/issues/44)）、安装脚本与文档修正（[#35](https://github.com/yjh051108/dsh-routing-suite/issues/35)/[#42](https://github.com/yjh051108/dsh-routing-suite/issues/42)/[#41](https://github.com/yjh051108/dsh-routing-suite/issues/41)）、injector git 装配自动构建（[#40](https://github.com/yjh051108/dsh-routing-suite/issues/40)）
+### 选择思维路由
 
-## 文档
+- 通用开发和稳定收敛：`Router Standard`；
+- 频繁执行、观察反馈、再调整：`Router React`；
+- 先分析规格、风险和边界：`Router Spec`。
 
-- 注入器引导（规范铁律 10 条）：`injector/README.md`
-- 路由预设论文与实验：`preset/docs/paper.md` + `preset/docs/experiments.md`（P1-P23）
-- 仓库结构迁移（submodule → 直接文件）：[docs/FLATTEN-MIGRATION.md](docs/FLATTEN-MIGRATION.md)
+路由预设改变模型的工作方式，不替代具体插件，也不自动完成任务。
 
-## 许可证
+### 启用分级模式
 
-MIT。致谢：xiaobright/modeltest（V4.1b 评测）、xiaobright/dsh-anchored-standard（锚定机制）。
+在 DSH 会话中输入：
+
+```text
+/graded 你的复杂任务
+```
+
+关闭：
+
+```text
+/graded off
+```
+
+也可以在信息充分时直接调用 `commit_star` 激活。它适合跨文件开发、研究、设计、强验收、长流程或需要红队审查的任务；简单问答和小改动不必使用。
+
+### 开发插件并实时迭代
+
+```text
+1. dev_scaffold_plugin 生成骨架
+2. 编写工具、循环或 UI
+3. dev_build_plugin 构建打包
+4. dev_inject_plugin 注入当前 DSH
+5. 修改代码后再次构建
+6. 自动 watch 重载，或调用 dev_reload_package
+7. 验证通过后 dev_install_package 正式装配
+```
+
+实验工具推荐先走：
+
+```text
+dev_stage_add → dev_stage_call → dev_stage_promote
+```
+
+## 4. 推荐组合流程
+
+```text
+1. injector 装载所需插件
+2. preset 选择模型工作方式
+3. graded 澄清需求并固化北极星
+4. graded 编写规格、验收标准和执行方式
+5. 模型按规格执行，通过打卡/红队门
+6. injector 在开发中热重载插件
+7. graded 做最终验收和审计
+```
+
+| 要解决的问题 | 使用组件 |
+| --- | --- |
+| 插件怎么进入、更新和卸载 | `injector` |
+| 模型如何思考和执行 | `preset` |
+| 复杂任务如何拆解并证明完成 | `graded` |
+
+## 5. 开发与测试
+
+### preset
+
+编辑不带版本号的源码，验证后同步快照：
+
+```bash
+node preset/router-standard/router-bootstrap-v34.selftest.mjs
+node preset/scripts/sync-preset.cjs router-standard
+node preset/scripts/sync-preset.cjs --all --check
+```
+
+然后重启 DSH。`dev_reload_preset` 只检查运行时行，不负责让 bundle patch 当前进程热生效。
+
+### graded
+
+```bash
+cd graded
+npm install
+npm test
+node scripts/build.mjs
+node scripts/e2e-3.1.mjs
+node scripts/e2e-redteam-group.mjs
+```
+
+已装配的 `graded` 可使用 `dev_reload_package dsh-graded-mode` 热重载。
+
+## 6. 常见问题
+
+**修改预设后没有生效？** 预设 patch 只在 DSH 启动时读取。同步快照后重启 DSH；`dev_reload_preset` 不负责热重载。
+
+**热重载后出现重复工具或孤儿路由？** 先看 `dev_plugin_status`，必要时调用 `dev_clear_routes`，再执行 `dev_reload_package`。
+
+**如何撤销实验插件？** 使用 `dev_uninject_plugin`，它会清理 host、client、监听器、路由和注入记录。
+
+**`graded` 是否每个任务都必须启用？** 不需要。它面向复杂、长流程、强验收和高风险任务。
+
+## 7. 进一步阅读
+
+- [injector/README.md](injector/README.md)：运行时注入器完整说明
+- [preset/README.md](preset/README.md)：思维模式路由预设说明
+- [graded/README.md](graded/README.md)：分级协议、工具和测试说明
+- [preset/AGENTS.md](preset/AGENTS.md)：预设开发规范
+- [docs/PROTOCOL-SYNC-0.2.0-rc.2.md](docs/PROTOCOL-SYNC-0.2.0-rc.2.md)：bundle 协议迁移说明
+
+MIT License。

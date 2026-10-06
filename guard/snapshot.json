@@ -1,0 +1,447 @@
+{
+  "available": true,
+  "harness": {
+    "version": "0.2.0-rc.2",
+    "packagesMdSha256": "20d4c693baaca4b9952e78815b1763eaa325ecf147cfffc2d1546291f19eb2c1",
+    "installablePackageCount": 242,
+    "installablePackageGroups": [
+      "acp",
+      "api",
+      "attachment",
+      "boot",
+      "browser-use",
+      "bundle",
+      "client",
+      "compaction",
+      "computer-use",
+      "context",
+      "core",
+      "credentials",
+      "deliverables",
+      "document",
+      "experimental",
+      "extensions",
+      "feedback",
+      "fs",
+      "goal",
+      "guard",
+      "hooks",
+      "host",
+      "interaction",
+      "jobs",
+      "llm",
+      "lsp",
+      "mcp",
+      "plan",
+      "preset",
+      "ptc-runtime",
+      "runtime-diagnostics",
+      "sandbox",
+      "schedule",
+      "sdk",
+      "session",
+      "session-query",
+      "settings",
+      "shell",
+      "skill",
+      "spill",
+      "ssh",
+      "storage",
+      "subagent",
+      "subprocess",
+      "telemetry",
+      "terminal",
+      "test-support",
+      "todo",
+      "typert",
+      "web",
+      "webhook",
+      "workflow",
+      "workspace"
+    ]
+  },
+  "cordisEvents": {
+    "eventsPath": "node_modules/@deepseek-ai/cordis/lib/types/events.d.ts",
+    "events": [
+      "internal/config",
+      "internal/dispatch",
+      "internal/get",
+      "internal/listener",
+      "internal/plugin",
+      "internal/service",
+      "internal/set",
+      "internal/status",
+      "internal/update"
+    ]
+  },
+  "harnessEvents": {
+    "scannedFiles": 2026,
+    "sourceCount": 44,
+    "sources": {
+      "node_modules/@deepseek-ai/cordis-plugin-loader/lib/types/index.d.ts": [
+        "exit",
+        "loader/config-update",
+        "loader/entry-init",
+        "loader/partial-dispose",
+        "loader/patch-context",
+        "loader/volatile-update"
+      ],
+      "node_modules/@deepseek-ai/cordis/lib/types/events.d.ts": [
+        "internal/config",
+        "internal/dispatch",
+        "internal/get",
+        "internal/listener",
+        "internal/plugin",
+        "internal/service",
+        "internal/set",
+        "internal/status",
+        "internal/update"
+      ],
+      "node_modules/@deepseek-ai/dsh-agent-loop/lib/types/index.d.ts": [
+        "agent-loop/config-start-failed"
+      ],
+      "node_modules/@deepseek-ai/dsh-agent-preset-registry/lib/types/types.d.ts": [
+        "agent-preset/selected"
+      ],
+      "node_modules/@deepseek-ai/dsh-agent/lib/types/runtime-types.d.ts": [
+        "agent/assistant-stream",
+        "agent/created",
+        "agent/disposed",
+        "agent/error",
+        "agent/inbox/claimed",
+        "agent/inbox/discarded",
+        "agent/inbox/inserted",
+        "agent/pre-step",
+        "agent/request",
+        "agent/request-error",
+        "agent/status",
+        "agent/turn-stopping"
+      ],
+      "node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/types.d.ts": [
+        "api-session/activity",
+        "api-session/added",
+        "api-session/error",
+        "api-session/removed",
+        "api-session/status"
+      ],
+      "node_modules/@deepseek-ai/dsh-app-boot/lib/types/index.d.ts": [
+        "app-boot/config-reload"
+      ],
+      "node_modules/@deepseek-ai/dsh-authorization/lib/types/index.d.ts": [
+        "authorization/settled"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-connection/lib/types/client/index.d.ts": [
+        "connection/reset"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-connection/lib/types/index.d.ts": [
+        "connection/request"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-locale/lib/types/client/index.d.ts": [
+        "locale/change"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-ui-commands/lib/types/client/service.d.ts": [
+        "command/executed"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/types/client/contract/input.d.ts": [
+        "slash/input-begin-command",
+        "slash/input-consume-token",
+        "slash/input-insert-reference",
+        "slash/input-insert-text"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-ui-renderer/lib/types/client/index.d.ts": [
+        "slots/changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-client-ui-theme/lib/types/client/index.d.ts": [
+        "theme/change"
+      ],
+      "node_modules/@deepseek-ai/dsh-commands/lib/types/types.d.ts": [
+        "commands/change"
+      ],
+      "node_modules/@deepseek-ai/dsh-compaction/lib/types/index.d.ts": [
+        "compaction/summary-error"
+      ],
+      "node_modules/@deepseek-ai/dsh-cordis-host-runner/lib/types/types.d.ts": [
+        "cordis/dynamic-package",
+        "cordis/dynamic-retract",
+        "cordis/inspect-query",
+        "cordis/inspect-query-resolved",
+        "cordis/request-run",
+        "cordis/request-run-resolved"
+      ],
+      "node_modules/@deepseek-ai/dsh-credentials/lib/types/types.d.ts": [
+        "credentials/record-updated",
+        "credentials/reference-updated"
+      ],
+      "node_modules/@deepseek-ai/dsh-deepseek-account/lib/types/index.d.ts": [
+        "deepseek-account/signed-out"
+      ],
+      "node_modules/@deepseek-ai/dsh-deepseek-account/lib/types/types.d.ts": [
+        "deepseek-account/model-sign-in-required",
+        "deepseek-account/session-expired"
+      ],
+      "node_modules/@deepseek-ai/dsh-fs/lib/types/index.d.ts": [
+        "fs/edit-intent",
+        "fs/observed",
+        "fs/write-intent"
+      ],
+      "node_modules/@deepseek-ai/dsh-goal/lib/types/domain.d.ts": [
+        "goal/changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-goal/lib/types/types.d.ts": [
+        "goal/activation-changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-hmr/lib/types/index.d.ts": [
+        "hmr/change",
+        "hmr/reload"
+      ],
+      "node_modules/@deepseek-ai/dsh-host-webserver/lib/types/index.d.ts": [
+        "webserver/index-inject"
+      ],
+      "node_modules/@deepseek-ai/dsh-llm/lib/types/index.d.ts": [
+        "llm/stream"
+      ],
+      "node_modules/@deepseek-ai/dsh-llm/lib/types/types.d.ts": [
+        "llm/adapters-updated"
+      ],
+      "node_modules/@deepseek-ai/dsh-message-feedback/lib/types/index.d.ts": [
+        "feedback/committed"
+      ],
+      "node_modules/@deepseek-ai/dsh-permission-presets/lib/types/types.d.ts": [
+        "permission-presets/catalog-changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-plugin-manager/lib/types/types.d.ts": [
+        "plugin-manager/changed",
+        "plugin-manager/install-log",
+        "plugin-manager/install-state"
+      ],
+      "node_modules/@deepseek-ai/dsh-schedule/lib/types/types.d.ts": [
+        "schedule/changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-session-telemetry/lib/types/index.d.ts": [
+        "session-telemetry/record"
+      ],
+      "node_modules/@deepseek-ai/dsh-session/lib/types/index.d.ts": [
+        "session/created",
+        "session/disposed",
+        "session/event",
+        "session/flush"
+      ],
+      "node_modules/@deepseek-ai/dsh-settings/lib/types/types.d.ts": [
+        "settings/document-updated"
+      ],
+      "node_modules/@deepseek-ai/dsh-skill/lib/types/index.d.ts": [
+        "skills/change"
+      ],
+      "node_modules/@deepseek-ai/dsh-storage-domain/lib/types/events.d.ts": [
+        "domain/changed"
+      ],
+      "node_modules/@deepseek-ai/dsh-subagent/lib/types/index.d.ts": [
+        "subagent/end",
+        "subagent/provider-added",
+        "subagent/provider-removed",
+        "subagent/start"
+      ],
+      "node_modules/@deepseek-ai/dsh-system-prompt/lib/types/index.d.ts": [
+        "system-prompt/assemble",
+        "system-prompt/change"
+      ],
+      "node_modules/@deepseek-ai/dsh-tools/lib/types/index.d.ts": [
+        "tools/change",
+        "tools/execute",
+        "tools/post-execute",
+        "tools/pre-execute",
+        "tools/ptc-dispatch-log",
+        "tools/result"
+      ],
+      "node_modules/@deepseek-ai/dsh-user-approval/lib/types/types.d.ts": [
+        "approval/request"
+      ],
+      "node_modules/@deepseek-ai/dsh-user-questions/lib/types/types.d.ts": [
+        "user-questions/request"
+      ],
+      "node_modules/@deepseek-ai/dsh-workflow/lib/types/index.d.ts": [
+        "workflow/agent-end",
+        "workflow/agent-start",
+        "workflow/end",
+        "workflow/log",
+        "workflow/phase",
+        "workflow/start"
+      ],
+      "node_modules/@deepseek-ai/dsh-workspace/lib/types/index.d.ts": [
+        "workspace/session-activity",
+        "workspace/session-stop"
+      ]
+    },
+    "events": [
+      "agent-loop/config-start-failed",
+      "agent-preset/selected",
+      "agent/assistant-stream",
+      "agent/created",
+      "agent/disposed",
+      "agent/error",
+      "agent/inbox/claimed",
+      "agent/inbox/discarded",
+      "agent/inbox/inserted",
+      "agent/pre-step",
+      "agent/request",
+      "agent/request-error",
+      "agent/status",
+      "agent/turn-stopping",
+      "api-session/activity",
+      "api-session/added",
+      "api-session/error",
+      "api-session/removed",
+      "api-session/status",
+      "app-boot/config-reload",
+      "approval/request",
+      "authorization/settled",
+      "command/executed",
+      "commands/change",
+      "compaction/summary-error",
+      "connection/request",
+      "connection/reset",
+      "cordis/dynamic-package",
+      "cordis/dynamic-retract",
+      "cordis/inspect-query",
+      "cordis/inspect-query-resolved",
+      "cordis/request-run",
+      "cordis/request-run-resolved",
+      "credentials/record-updated",
+      "credentials/reference-updated",
+      "deepseek-account/model-sign-in-required",
+      "deepseek-account/session-expired",
+      "deepseek-account/signed-out",
+      "domain/changed",
+      "exit",
+      "feedback/committed",
+      "fs/edit-intent",
+      "fs/observed",
+      "fs/write-intent",
+      "goal/activation-changed",
+      "goal/changed",
+      "hmr/change",
+      "hmr/reload",
+      "internal/config",
+      "internal/dispatch",
+      "internal/get",
+      "internal/listener",
+      "internal/plugin",
+      "internal/service",
+      "internal/set",
+      "internal/status",
+      "internal/update",
+      "llm/adapters-updated",
+      "llm/stream",
+      "loader/config-update",
+      "loader/entry-init",
+      "loader/partial-dispose",
+      "loader/patch-context",
+      "loader/volatile-update",
+      "locale/change",
+      "permission-presets/catalog-changed",
+      "plugin-manager/changed",
+      "plugin-manager/install-log",
+      "plugin-manager/install-state",
+      "schedule/changed",
+      "session-telemetry/record",
+      "session/created",
+      "session/disposed",
+      "session/event",
+      "session/flush",
+      "settings/document-updated",
+      "skills/change",
+      "slash/input-begin-command",
+      "slash/input-consume-token",
+      "slash/input-insert-reference",
+      "slash/input-insert-text",
+      "slots/changed",
+      "subagent/end",
+      "subagent/provider-added",
+      "subagent/provider-removed",
+      "subagent/start",
+      "system-prompt/assemble",
+      "system-prompt/change",
+      "theme/change",
+      "tools/change",
+      "tools/execute",
+      "tools/post-execute",
+      "tools/pre-execute",
+      "tools/ptc-dispatch-log",
+      "tools/result",
+      "user-questions/request",
+      "webserver/index-inject",
+      "workflow/agent-end",
+      "workflow/agent-start",
+      "workflow/end",
+      "workflow/log",
+      "workflow/phase",
+      "workflow/start",
+      "workspace/session-activity",
+      "workspace/session-stop"
+    ]
+  },
+  "dshToolsRegister": {
+    "indexPath": "node_modules/@deepseek-ai/dsh-tools/lib/index.js",
+    "registerValidatesOutputSchema": true,
+    "registerValidatesParameters": false,
+    "defineToolCompilesParameters": true
+  },
+  "toolDisposal": {
+    "indexPath": "node_modules/@deepseek-ai/dsh-tools/lib/index.js",
+    "exportsUnregister": false,
+    "serviceHasUnregister": false
+  },
+  "clientModules": {
+    "typesPath": "node_modules/@deepseek-ai/dsh-client-modules/lib/types/index.d.ts",
+    "class": "ClientModuleRegistry",
+    "publicMethods": [
+      "artifactBaseline",
+      "clientPath",
+      "constructor",
+      "fetchBundle",
+      "graph",
+      "onGraphChanged",
+      "onRebuilt",
+      "rebuilt"
+    ],
+    "privateMembers": [
+      "batchResponses",
+      "bundleResource",
+      "captureArtifactBaseline",
+      "chunkRequest",
+      "chunkResponse",
+      "compose",
+      "composed",
+      "dirty",
+      "flush",
+      "flushQueued",
+      "graphListeners",
+      "initialBundleSnapshot",
+      "locatePkgJson",
+      "nearestPackage",
+      "notifyGraphChanged",
+      "pkgMeta",
+      "previousBatchResponses",
+      "processOne",
+      "readSourceMap",
+      "rebuildListeners",
+      "reconcilePackage",
+      "resolveMeta",
+      "resolveSource",
+      "responses",
+      "serveBundle",
+      "sourceKey",
+      "sources",
+      "table"
+    ]
+  },
+  "loaderResolution": {
+    "bootPath": "node_modules/@deepseek-ai/dsh-app-boot/lib/index.js",
+    "loaderPath": "node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js",
+    "anchorsAtPatchDir": true,
+    "resolvesRelativeAgainstBaseUrl": true,
+    "hasCordisBuiltins": true,
+    "anchorsOnlyGroupArrayConfig": true,
+    "anchorsConfigPlugins": false
+  }
+}

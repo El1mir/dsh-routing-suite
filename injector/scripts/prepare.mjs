@@ -25,7 +25,19 @@ import { fileURLToPath } from 'node:url'
 // prepare.mjs lives in scripts/, so the package root is one level up.
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const TSDOWN_RANGE = 'tsdown@^0.22.14'
-const REQUIRED = ['lib/index.js', 'lib/client.js']
+// ⚠️ 类型声明也在必产清单里：package.json 的 `types` / `exports["./client"].types`
+// 指向 `lib/index.d.mts` / `lib/client.d.mts`，而 tsdown.config.ts 的两个 bundle
+// 都开了 `dts: true`。若这里不校验，一旦哪天 dts 被关掉（或有人退回固定的
+// entryFileNames 字符串——那会让类型 chunk 变成 `lib/index.ts` 这种非声明中间物），
+// 安装会「成功」却发不出一份悬空引用的声明面，守卫 package-metadata-paths 才报。
+// 这个清单同时是 verifyOutputs() 的「已构建，跳过」判据，所以补上它也能防止
+// 拿一份缺类型的旧 lib/ 短路掉重建。
+const REQUIRED = [
+  'lib/index.js',
+  'lib/client.js',
+  'lib/index.d.mts',
+  'lib/client.d.mts',
+]
 
 function run(command, args, cwd = ROOT) {
   const result = spawnSync(command, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' })

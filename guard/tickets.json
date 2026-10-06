@@ -1,0 +1,20 @@
+{
+  "_comment": "契约守卫的工单台账：把已经落地的工单号写进 done，守卫对『归属该工单的旧写法』就会自动从『只报告不阻断』转为『阻断』。工单未落地时不要写进来。",
+  "_contract": "guard/contracts.mjs 的 runGuards() 读本文件的 done 数组；文件缺失或读不动时按空集合处理（所有带归属的违规都只报告不阻断）。",
+  "_ownerMap": {
+    "11": "graded 生命周期与请求校验（ctx.on('dispose') 等）",
+    "02": "注入器清单与 cordis peer 声明（@deepseek-ai/dsh-client-runtime 等）",
+    "03": "注入器客户端模块联动（ClientModuleRegistry private 成员访问）",
+    "06": "router-standard 迁移到 bundle 声明（@deepseek-ai/dsh-workflow-worker-thread）",
+    "07": "router-react 与 router-spec 迁移到 bundles",
+    "08": "preset 同步脚本迁移到 bundle 时代（sync-preset.cjs 重写 + 预设热重载不再读 .agent-presets）"
+  },
+  "done": [
+    "02",
+    "03",
+    "06",
+    "07",
+    "08",
+    "11"
+  ]
+}

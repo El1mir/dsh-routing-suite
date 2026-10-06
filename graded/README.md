@@ -30,17 +30,24 @@
 
 ## 装配（DSH 官方路径）
 
+路径无需手填，从环境推导即可（`npm root -g` 的上一级 = npm 全局目录，`dsh` 默认主目录 = `~/.dsh`）：
+
 ```bash
-# 占位符按你的环境替换：<NPM_GLOBAL>（npm 全局目录）、<DSH_HOME>（默认 ~/.dsh）、<PLUGIN_DIR>（本插件目录）
-export PATH="<NPM_GLOBAL>:$PATH"
-DSH_HOME='<DSH_HOME>' node <NPM_GLOBAL>/@deepseek-ai/dsh/lib/bin.js plugin --profile web add <PLUGIN_DIR>
+NPM_GLOBAL="$(dirname "$(npm root -g)")"          # npm 全局目录
+PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"    # 本插件目录（按实际仓库位置调整）
+DSH_HOME="${DSH_HOME:-$HOME/.dsh}"                # DSH 主目录
+
+DSH_HOME="$DSH_HOME" node "$NPM_GLOBAL/@deepseek-ai/dsh/lib/bin.js" plugin --profile web add "$PLUGIN_DIR"
 # 重启 DSH web
 ```
+
+> 脚本类工具（`scripts/e2e-*.mjs`）不再需要手填路径：它们统一从 `scripts/env-paths.mjs` 推导，
+> 推导失败时会打印具体的修复指引并以退出码 2 结束。
 
 ## 工具（6）
 
 | 工具 | 作用 |
-|---|---|
+| --- | --- |
 | `commit_star` | 脑暴定稿（purpose 必填；mode 随定稿落盘；修订保留阶段；开发期只读） |
 | `edit_plan` | L1 组规格 / L2 小类规格（全必填门控）；回执全量（树+标准+形态+模式） |
 | `lock_stage` | 锁定（先复检后写入；L2 回执=完整规格评审单） |

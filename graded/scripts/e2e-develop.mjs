@@ -7,15 +7,18 @@
  *
  * 用法：node scripts/e2e-develop.mjs [任务文本]
  *
- * 依赖：dsh 安装的 ws 包（绝对路径 import）。
+ * 依赖：dsh 安装的 ws 包（从环境推导，见 env-paths.mjs）。
  */
-import WebSocket from 'file:///PATH_TO_NPM_GLOBAL/node_modules/@deepseek-ai/dsh/node_modules/ws/index.js'
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
+import { PLUGIN_DIR, wsModuleUrl } from './env-paths.mjs'
+
+// ws 是 dsh 的传递依赖（不在本插件 dependencies 里），只能从安装树推导。
+const WebSocket = (await import(wsModuleUrl())).default
 import { zstdRead } from './zstd-read.mjs'
 
 const BASE = 'http://127.0.0.1:3080'
 const DSH_HOME = (process.env.DSH_HOME || process.env.USERPROFILE + '/.dsh')
-const TASK = process.argv[2] || '把 PATH_TO_PLUGIN/README.md 的「为什么有这个东西」一节重写为更精炼的三句,每改完一段就标记。'
+const TASK = process.argv[2] || `把 ${PLUGIN_DIR}/README.md 的「为什么有这个东西」一节重写为更精炼的三句,每改完一段就标记。`
 
 /** RPC 调用（http /api/<method> 信封）。 */
 async function rpc(method, args, rpcId = crypto.randomUUID()) {
@@ -46,7 +49,6 @@ function readSession(sessionId) {
   return zstdRead(zpath)
 }
 
-let line = 0
 function* events(sessionId) {
   const raw = readSession(sessionId)
   for (const l of raw.split('\n')) {
@@ -72,8 +74,8 @@ async function main() {
     } catch {}
   })
 
-  // ② 创建会话 + 触发
-  const { sessionId } = await rpc('session.create', { cwd: 'PATH_TO_PLUGIN', agentPreset: 'standard' })
+  // ② 创建会话 + 触发（工作目录 = 本插件目录，会话里可读到 README）
+  const { sessionId } = await rpc('session.create', { cwd: PLUGIN_DIR, agentPreset: 'standard' })
   console.log('SID', sessionId)
   await rpc('session.prompt', { sessionId, mode: 'queue', content: [{ type: 'text', text: `/graded ${TASK}` }] })
 
@@ -146,5 +148,4 @@ async function main() {
   console.log('--- FRAMES', frames.length, '---')
 }
 
-import { readdirSync } from 'node:fs'
 main().catch((e) => { console.error('E2E FAIL:', e); process.exit(1) })

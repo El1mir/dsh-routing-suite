@@ -1,3 +1,15 @@
+# ⚠️ SUPERSEDED BY THE BUNDLE PROTOCOL — DO NOT EDIT AS CONFIG.
+#
+# This `preset.yml` held the display metadata (name / description / order) of the
+# LEGACY directory-protocol preset. Those fields now live in the declaration row
+# of `router-standard/bundle/cordis.patch.yml` and are restated there IN FULL, because the
+# loader replaces a row's `config` wholesale rather than deep-merging it.
+#
+# Nothing reads this file any more. It is retained only so the migration is
+# auditable side by side with the row that replaced it, and because ticket 08
+# still has to rewrite the sync tooling that used to copy it.
+#
+
 name: Router Standard
 description: "Self-routed progressive tool disclosure (one bootstrap guide per session, then zero injection; tools unlock by leveling, next tier pre-unlocked; phase state persisted per session) on native direct-call surface (no PTC/run_code, no pressure sensor). RL sentence persona."
 order: 1

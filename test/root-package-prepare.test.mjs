@@ -21,6 +21,12 @@ test('the root package runs the injector prepare hook for git installs', () => {
     )
     writeFileSync(join(fixture, 'injector', 'lib', 'index.js'), '')
     writeFileSync(join(fixture, 'injector', 'lib', 'client.js'), '')
+    // prepare.mjs 的必产清单含类型声明（package.json 的 `types` /
+    // `exports["./client"].types` 指向它们）。这里必须一并造出来，否则
+    // verifyOutputs() 判为「未构建」→ 落到 npx tsdown → 本测试的意图
+    // （已有 lib/ 时走「跳过」快路径）就测不到了。
+    writeFileSync(join(fixture, 'injector', 'lib', 'index.d.mts'), '')
+    writeFileSync(join(fixture, 'injector', 'lib', 'client.d.mts'), '')
 
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
     const result = spawnSync(npm, ['run', 'prepare'], {

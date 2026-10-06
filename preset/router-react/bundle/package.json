@@ -1,0 +1,24 @@
+{
+  "name": "@dsh-external/dsh-preset-router-react",
+  "version": "0.3.3",
+  "private": true,
+  "type": "module",
+  "description": "Router React (experimental) agent preset as an installable Cordis bundle (declaration row, not the legacy .agent-presets directory).",
+  "exports": {
+    ".": "./cordis.patch.yml",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./router-bootstrap-v17.mjs": "./router-bootstrap-v17.mjs",
+    "./router-core-v17.mjs": "./router-core-v17.mjs"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "router-bootstrap-v17.mjs",
+    "router-core-v17.mjs"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

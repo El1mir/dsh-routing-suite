@@ -5,20 +5,21 @@
   "private": true,
   "type": "module",
   "main": "./lib/index.js",
-  "types": "./lib/types/index.d.ts",
+  "types": "./lib/index.d.mts",
   "exports": {
     ".": {
-      "types": "./lib/types/index.d.ts",
+      "types": "./lib/index.d.mts",
       "default": "./lib/index.js"
     },
     "./client": {
-      "types": "./lib/types/client/index.d.ts",
+      "types": "./lib/client.d.mts",
       "default": "./lib/client.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "lib",
+    "package.json",
     "cordis.patch.yml",
     "scripts/build.sh",
     "scripts/fix-patch.mjs",
@@ -31,19 +32,21 @@
     },
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-modules",
         "@deepseek-ai/dsh-client-ui-slots"
       ],
       "platform": "web"
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": ">=0.0.1-rc <2",
-    "@deepseek-ai/cordis": ">=4.0.0-rc <5",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-client-modules": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "~3.18.4"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis-plugin-loader": "^1.0.2",
+    "@deepseek-ai/cordis-plugin-loader": "~1.0.5",
     "@types/node": "^24.13.3",
     "tsdown": "^0.22.14",
     "typescript": "^5.9.3"

@@ -16,7 +16,7 @@
 
 import {
   bandFor, sessionMode, extractText, isComplexTask, sessionEvents
-} from './router-core-v34.mjs'
+} from './router-core.mjs'
 import { join, dirname } from 'node:path'
 import { homedir, tmpdir } from 'node:os'
 import { pathToFileURL } from 'node:url'
@@ -755,7 +755,7 @@ export function apply(ctx, config) {
           currentAgent()?.inbox.append('next-step', {
             id: 'bootstrap-fresh-' + Date.now(),
             role: 'user',
-            source: { kind: 'plugin', plugin: 'router-bootstrap' },
+            source: { kind: 'plugin:router-bootstrap' },
             content: [{ type: 'text', text: guide }],
           })
         } catch { /* skip */ }
@@ -788,7 +788,7 @@ export function apply(ctx, config) {
         currentAgent()?.inbox.append('next-step', {
           id: 'bootstrap-' + Date.now(),
           role: 'user',
-          source: { kind: 'plugin', plugin: 'router-bootstrap' },
+          source: { kind: 'plugin:router-bootstrap' },
           content: [{ type: 'text', text: guide }],
         })
       } catch { /* skip */ }
@@ -1083,33 +1083,9 @@ export function apply(ctx, config) {
 
     n += make({
       name: 'dev_reload_preset_live',
-      description: '预设热重载（当前会话即时生效；own-layer shim 版）。',
+      description: '预设热重载（bundle 协议；own-layer shim 版）。注：bundle patch 只在 DSH 启动时读取，改完需重启 DSH。',
       parameters: { targetSessionId: { type: 'string', description: '目标会话 id（缺省 = 当前会话）' } },
-      execute: async (shimArgs) => {
-        const ap2 = ctx.get('agentPresets')
-        const target2 = shimArgs?.targetSessionId ? (ctx.get('agents')?.get?.(String(shimArgs.targetSessionId)) ?? agent) : agent
-        if (!ap2 || !target2) return 'ERROR: agentPresets/target 不可用'
-        const targetSid2 = shimArgs?.targetSessionId || target2.session?.id || sid
-        const before2 = ap2.composedPreset(target2.ctx) ?? 'unknown'
-        if (before2 === 'unknown') return 'ERROR: 未加入预设'
-        const ymlFile2 = join(process.env.DSH_HOME || homedir(), '.agent-presets', before2, 'agent.cordis.yml')
-        let yml2 = ''
-        try { yml2 = readFileSync(ymlFile2, 'utf8') } catch (e) { return 'ERROR: 读取失败 ' + String(e) }
-        const refRe2 = /(name: \.\/[A-Za-z0-9._-]+\.mjs)(\?v=\d+)?/g
-        const b2 = []
-        yml2 = yml2.replace(refRe2, (whole, base, query) => {
-          const cur = query ? Number(query.slice(3)) : 0
-          b2.push(base.split('/').pop() + '->?v=' + (cur + 1))
-          return base + '?v=' + (cur + 1)
-        })
-        if (!b2.length) return 'ERROR: 无相对 .mjs 引用'
-        writeFileSync(ymlFile2, yml2, 'utf8')
-        const stage2 = ensureStage()[targetSid2]?.stage ?? 0
-        await ap2.recompose(target2.ctx, before2)
-        applyStageRestrict(target2, stage2)
-        const shimN = installMetaShim(target2)
-        return 'OK: shim live reloaded\n- bump: ' + b2.join(', ') + '\n- before=' + before2 + ' after=' + (ap2.composedPreset(target2.ctx) ?? before2) + '\n- shim=' + shimN
-      },
+      execute: async () => 'ERROR: bundle preset patch 仅在 DSH 启动时读取；修改 bundle 后请重启 DSH。',
     })
 
 
@@ -1163,7 +1139,7 @@ export function apply(ctx, config) {
           if (args.action === 'blocked' && authority.kind === 'goal-round' && authority.goal.roundsStarted < 3) throw new Error('blocked requires at least 3 consecutive goal rounds')
           const goal = args.action === 'complete' ? goalsSvc.complete(execution.agent, ref) : goalsSvc.block(execution.agent, ref, { code: 'model-reported', message: String(args.blocked_reason || '') })
           if (authority.kind === 'goal-round' && exec && typeof exec.deferContext === 'function') {
-            exec.deferContext({ role: 'user', source: { kind: 'plugin', plugin: 'tool-goal', form: 'notice' }, content: [{ type: 'text', text: args.action === 'complete' ? '<goal_complete>' : '<goal_blocked>' }] })
+            exec.deferContext({ role: 'user', source: { kind: 'plugin:tool-goal', form: 'notice' }, content: [{ type: 'text', text: args.action === 'complete' ? '<goal_complete>' : '<goal_blocked>' }] })
           }
           return JSON.stringify(goalsValue(goal))
         }
@@ -1225,45 +1201,11 @@ export function apply(ctx, config) {
 
   registerTool({
     name: 'dev_reload_preset_live',
-    description: '预设热重载（当前会话即时生效）：bump agent.cordis.yml 相对 .mjs 的 ?v=N → AgentPresets.recompose 把本 agent 重链到新 generation。仅在同预设自身向前兼容升级时使用（否则已记录工具调用可能在新代不可见）。',
+    description: '预设热重载（bundle 协议）：⚠️ 已停用 —— bundle patch 只在 DSH 启动时读取，改写它当场无效（AgentPresetRegistry.recompose 只 mount 已保存的 definition，不重读 patch）。且运行时行必须是裸包名子路径：相对行 ./x.mjs 嵌在 config.plugins[] 里永不被锚定（会按 profile 目录解析而 ERR_MODULE_NOT_FOUND），裸包名带 ?v= 又会 ERR_PACKAGE_PATH_NOT_EXPORTED。改预设代码后请重启 DSH。',
     parameters: { targetSessionId: { type: 'string', description: '目标会话 id（缺省 = 当前会话）' } },
     output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
-    async execute(args) {
-      const ap = ctx.get('agentPresets')
-      const agentsSvc = ctx.get('agents')
-      let agent = currentAgent()
-      let label = 'current'
-      if (args && args.targetSessionId) {
-        const found = agentsSvc?.get(String(args.targetSessionId))
-        agent = found ?? null
-        label = String(args.targetSessionId)
-      }
-      if (!ap || !agent) return 'ERROR: agentPresets/agent 不可用 (target=' + label + ')'
-      const before = ap.composedPreset(agent.ctx) ?? 'unknown'
-      if (before === 'unknown') return 'ERROR: 当前 agent 未加入预设'
-      const home = process.env.DSH_HOME || homedir()
-      const presetDir = join(home, '.agent-presets', before)
-      const ymlFile = join(presetDir, 'agent.cordis.yml')
-      let yml = ''
-      try { yml = readFileSync(ymlFile, 'utf8') } catch (e) { return 'ERROR: 读取失败 ' + ymlFile + ' ' + String(e) }
-      const refRe = /(name: \.\/[A-Za-z0-9._-]+\.mjs)(\?v=\d+)?/g
-      let bumped = []
-      let matched = false
-      yml = yml.replace(refRe, (whole, base, query) => {
-        matched = true
-        const cur = query ? Number(query.slice(3)) : 0
-        bumped.push(base.split('/').pop() + ' -> ?v=' + (cur + 1))
-        return base + '?v=' + (cur + 1)
-      })
-      if (!matched) return 'ERROR: 无相对 .mjs 引用'
-      writeFileSync(ymlFile, yml, 'utf8')
-      const targetSid = (args && args.targetSessionId) || currentSession()?.id || agent.session?.id || ''
-      const stage = ensureStage()[targetSid]?.stage ?? 0
-      const preset = await ap.recompose(agent.ctx, before)
-      applyStageRestrict(agent, stage)
-      const after = ap.composedPreset(agent.ctx) ?? preset?.id ?? 'unknown'
-      const shimN = installMetaShim(agent)
-      return 'OK: live reloaded\n- bump: ' + bumped.join(', ') + '\n- before: ' + before + '\n- after: ' + after + '\n- shim: ' + shimN + '\n本工具调用仍跑在旧代；下一轮请求即挂载新一代。'
+    async execute() {
+      return 'ERROR: bundle preset patch 仅在 DSH 启动时读取；修改 bundle 后请重启 DSH。'
     },
   })
 

@@ -1,0 +1,26 @@
+{
+  "name": "@dsh-external/dsh-preset-router-standard",
+  "version": "0.3.3",
+  "private": true,
+  "type": "module",
+  "description": "Router Standard agent preset as an installable Cordis bundle (declaration row, not the legacy .agent-presets directory).",
+  "exports": {
+    ".": "./cordis.patch.yml",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./router-bootstrap-v34.mjs": "./router-bootstrap-v34.mjs",
+    "./router-core-v34.mjs": "./router-core-v34.mjs",
+    "./gitbash-executor.mjs": "./gitbash-executor.mjs"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "router-bootstrap-v34.mjs",
+    "router-core-v34.mjs",
+    "gitbash-executor.mjs"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

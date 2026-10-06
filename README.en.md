@@ -30,7 +30,7 @@ speced plan → check-in → group close-out → final check, with redteam gate 
 git clone https://github.com/yjh051108/dsh-routing-suite.git
 cd dsh-routing-suite
 
-# 2. One-shot install (injector assembly + preset copy + layout self-check + restart prompt)
+# 2. One-shot install (injector assembly + three preset bundles + assembly self-check + restart prompt)
 .\install.ps1
 ```
 
@@ -41,19 +41,20 @@ Or manually:
 dsh plugin --profile web add .\injector
 # If dsh is not on PATH (npx @deepseek-ai/dsh web): npx '@deepseek-ai/dsh' plugin --profile web add .\injector
 
-# Step 2: install the router presets (one or both; DSH scans one level only,
-# so each preset directory must sit FLAT under .agent-presets)
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-standard'
-Copy-Item -Recurse .\preset\router-standard $target
+# Step 2: assemble the three router presets. Each preset/<name>/bundle/ IS an npm
+# package declaring "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+dsh plugin --profile web add .\preset\router-standard\bundle
+dsh plugin --profile web add .\preset\router-react\bundle
+dsh plugin --profile web add .\preset\router-spec\bundle
 
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-spec'
-Copy-Item -Recurse .\preset\router-spec $target
-
-# Step 3: restart DSH → pick Router Standard / Router Spec in a new session
+# Step 3: restart DSH → pick Router Standard / Router React / Router Spec in a new session
 ```
 
-> Do NOT copy the `preset` directory as a whole — the extra nesting hides the
-> presets from DSH discovery.
+> Do NOT copy preset directories into `$env:USERPROFILE\.dsh\.agent-presets\` any more —
+> that directory protocol no longer exists in the current harness (0.2.0-rc.2): nothing in
+> the installed tree reads `.agent-presets`, and `@deepseek-ai/dsh-agent-preset` only
+> accepts presets registered through a Cordis composition. All three presets are now
+> **bundle packages**, wired up via the profile's `dsh.profile.bundles`.
 
 ## Components
 
@@ -68,8 +69,9 @@ Copy-Item -Recurse .\preset\router-spec $target
 The three components now evolve together with this repository (`injector/`,
 `preset/` and `graded/` are ordinary directories whose contents are committed directly); the
 standalone upstream repos `dsh-super-injector` / `dsh-router-standard` stay for
-independent releases and may later become mirrors/archives. The preset install
-directory is `preset/router-standard` (flat, no extra nesting).
+independent releases and may later become mirrors/archives. Presets are installed as
+bundle packages: each `preset/<name>/bundle/` is a standalone npm package installed with
+`dsh plugin --profile web add` (no longer a `.agent-presets` directory copy).
 
 ## router-standard preset capabilities (P1–P23 measured summary)
 

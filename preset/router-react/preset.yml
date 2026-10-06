@@ -1,2 +1,14 @@
+# ⚠️ SUPERSEDED BY THE BUNDLE PROTOCOL — DO NOT EDIT AS CONFIG.
+#
+# This `preset.yml` held the display metadata (name / description / order) of the
+# LEGACY directory-protocol preset. Those fields now live in the declaration row
+# of `router-react/bundle/cordis.patch.yml` and are restated there IN FULL, because the
+# loader replaces a row's `config` wholesale rather than deep-merging it.
+#
+# Nothing reads this file any more. It is retained only so the migration is
+# auditable side by side with the row that replaced it, and because ticket 08
+# still has to rewrite the sync tooling that used to copy it.
+#
+
 name: Router React (experimental)
 description: Task-aware routing — RL-interface restoration (think-act loops): first request = one RL sentence + shell/editor surface. Full Standard tools after the first tool call.

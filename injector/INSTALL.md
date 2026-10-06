@@ -65,14 +65,13 @@ dsh plugin --profile web add github:yjh051108/dsh-super-injector
 自己从源码构建（例如改过 `src/` 之后）：
 
 ```bash
-# 1. 安装依赖。peerDependencies 由 DSH 宿主提供，npm 却会自动装 peer 并撞上
-#    未发布的 @deepseek-ai/dsh-type-meta（E404）——用 --legacy-peer-deps 跳过。
-npm install --legacy-peer-deps --no-audit --no-fund
+# 1. 安装依赖。peerDependencies 由 DSH 宿主提供（@deepseek-ai/cordis ~4.0.4、
+#    @deepseek-ai/dsh-tools 0.2.0-rc.2 等，全部是精确钉版本的真实包），
+#    npm 会照常装 peer，无需任何跳过参数。
+npm install --no-audit --no-fund
 
-# 2. 类型检查 + 声明产出。cordis/schemastery 必须解析到 @deepseek-ai 的分叉版
-#    （4.0.1 / 3.18.1）：公共 registry 的 cordis d.ts 在 NodeNext 下是坏的，
-#    而打包后的 app bundle 又把分叉版 d.ts 剥掉了。把分叉包复制进
-#    node_modules/@deepseek-ai/ 并链接（之后任何 npm install 都会再次剪掉，需重链）。
+# 2. 类型检查 + 声明产出。cordis/schemastery 现在就是 @deepseek-ai 的官方分叉版
+#    （由上面的 peerDependencies 直接解析到，不再是手工复制进 node_modules 的旧做法）。
 ./node_modules/.bin/tsc -p tsconfig.json
 
 # 3. 打包 host + client（lib/ 已存在时 prepare.mjs 会跳过——先 rm -rf lib 强制重建）
@@ -184,7 +183,7 @@ dev_self_test         → 一键回归 8 项，期望全部 PASS（含注入/热
 ## 6. 常见问题排查
 
 | 症状 | 原因与解法 |
-|---|---|
+| --- | --- |
 | `dsh` 命令不存在 | dsh CLI 不在 PATH。Windows 上它随 DSH 安装提供（如 `C:\Users\你\.workbuddy\binaries\node\versions\22.22.2\dsh.cmd`），确认 PATH 或使用完整路径 |
 | 装了但 `dev_*` 工具不存在 | 注入器未装配成功。检查：bundle 是否在 `~/.dsh/profiles/web/package.json` 的 `dsh.profile.bundles` 里；web 是否重启过；确认装的是**正在运行的 profile**（`--profile web` 与你的启动 profile 一致） |
 | 装配报 `entry not found` | patch 格式错误（顶层 `- id:` 而不是 `- insert:` 包裹）。参考方式 C 的示例 |
@@ -224,5 +223,5 @@ rm -rf ~/.dsh/profiles/web/node_modules/@yjh051108/dsh-super-injector
 
 ---
 
-**仓库**：https://github.com/yjh051108/dsh-super-injector
-**Releases**：https://github.com/yjh051108/dsh-super-injector/releases
+**仓库**：<https://github.com/yjh051108/dsh-super-injector>
+**Releases**：<https://github.com/yjh051108/dsh-super-injector/releases>

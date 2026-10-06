@@ -147,9 +147,24 @@ export function classifyTask(text) {
 
 /** Per-session mode derived from durable events (resume-safe). */
 export function sessionMode(session) {
-  const events = session.events
+  const events = sessionEvents(session)
   const userMsg = events.find((e) => e.type === 'user/message')
   return classifyTask(extractText(userMsg?.data))
+}
+
+/**
+ * Durable session events, tolerating host planes where the live session object
+ * exposes no `events` array (lazy snapshot / capture-only session). Mirrors the
+ * guard router-standard has carried since v0.3.0; reading `session.events`
+ * directly threw "Cannot read properties of undefined (reading 'some')".
+ */
+export function sessionEvents(session) {
+  if (!session) return []
+  if (Array.isArray(session.events)) return session.events
+  if (typeof session.snapshotEvents === 'function') {
+    try { return session.snapshotEvents() } catch { return [] }
+  }
+  return []
 }
 
 export function extractText(data) {

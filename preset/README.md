@@ -37,7 +37,7 @@ router-pro 线已退役删除。完整演进：见 [CHANGELOG.md](CHANGELOG.md) 
 | **standard（标准路由预设）** | 分类 persona（spec/react/weak）+ 完整 prompt sections + 分带首轮工具面 | 按分类带行动：react 直接产出、spec 先读后改、weak 内路由（每轮近距离引导） |
 | **spec（spec 路由预设）** | 分类 persona（spec/react/weak）+ 完整 prompt sections | **雷霆大思考**：首轮超长思维链（101K 推理 0 行动是其特征，不是缺陷） |
 
-> 选择：安装两个预设之一（Router Standard / Router Spec，见 Usage）。
+> 选择：安装三个预设之一（Router Standard / Router React / Router Spec，见 Usage）。
 > `dev_router_status` 显示当前路由模式。
 
 > This is a research artifact. It encodes a measured property of DeepSeek V4
@@ -141,29 +141,41 @@ version of that external routing.
 
 ## Usage
 
-**Two presets** (v0.3.0; the router-pro line was retired): install one or more under `~/.dsh/.agent-presets/`:
+**Three presets** (v0.3.0; the router-pro line was retired): each is a standalone npm
+package under `preset/<name>/bundle/` declaring
+`"dsh": { "bundle": { "patch": "./cordis.patch.yml" } }` — install with the official
+`dsh plugin` channel (the old `~/.dsh/.agent-presets/` directory protocol no longer exists
+in the current harness):
 
 ```powershell
 # 标准路由预设（RL 接口还原，默认推荐）
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-standard'
-Copy-Item -Recurse .\preset\router-standard $target
+dsh plugin --profile web add .\preset\router-standard\bundle
+
+# react 路由预设（think-act 循环恢复）
+dsh plugin --profile web add .\preset\router-react\bundle
 
 # spec 路由预设（深度思考优先）
-$target = Join-Path $env:USERPROFILE '.dsh\.agent-presets\router-spec'
-Copy-Item -Recurse .\preset\router-spec $target
+dsh plugin --profile web add .\preset\router-spec\bundle
 ```
 
-**免重启安装（推荐）**：装好 [dsh-super-injector](https://github.com/yjh051108/dsh-super-injector)
-后（见套件 `scripts/install-injector.ps1`），改预设代码不再需要换文件名/重启：
+**改预设代码必须重启**：bundle 的 `cordis.patch.yml` 只在 DSH 启动时读取
+（`AgentPresetRegistry.recompose` 用的是 registry 已保存的 definition，不会重读 patch），
+所以改完 preset 源码后**重启 DSH 是唯一且必要的一步** —— 重启既重读补丁、也丢弃 ESM 缓存，
+不存在「还要再 bump 一个缓存戳」这回事。装好 [dsh-super-injector](https://github.com/yjh051108/dsh-super-injector)
+后可用 `dev_reload_preset` 做**装配自检**（校验运行时行是裸包名子路径、已在 `package.json`
+的 `exports` 里声明、且文件就位）—— 它**不做热重载**，
+会明确告诉你「改写 bundle patch 当场无效，请重启」：
 
-```
-dev_reload_preset router-standard   # 预设热更新：?v=N query 绕 ESM 缓存，新会话立即用新代码
+```bash
+dev_reload_preset router-standard   # 自检运行时行能否被解析；仍需重启 DSH 才生效
 ```
 
 **注意事项（实测血泪）**：
 
-1. **ESM 缓存**：loader 按 URL 缓存模块——原地覆盖文件内容不生效（改代码必须
-   `dev_reload_preset` 或换文件名）。
+1. **重启 DSH 就够了**：bundle patch 只在 DSH 启动时读取，而重启同时丢弃 ESM 缓存 ——
+   这正是为什么 `?v=N` 缓存戳**不再需要、且有害**：运行时行是裸包名子路径，
+   带查询串会因 `exports` 精确匹配而报 `ERR_PACKAGE_PATH_NOT_EXPORTED`。
+   （相对行 `./x.mjs` 则永不被锚定，会按 profile 目录解析而 `ERR_MODULE_NOT_FOUND`。）
 2. **首次会话必须新开**：路由模式在首个请求锁定（路径承诺），中途切 GUI 模型/
    改配置不影响已运行会话。
 3. **子代理不路由**：`parentSession` 会话跳过路由层（社区 #5 修复），shell-less
@@ -176,9 +188,10 @@ dev_reload_preset router-standard   # 预设热更新：?v=N query 绕 ESM 缓�
 6. **自举卸载**：`dev_uninject_plugin --self=true` 可卸载注入器自身（保留
    装配链，重启自动恢复）——用于验证安装闭环。
 
-Restart DSH (or install via the suite script for zero-touch), start a new
-session, pick **Router Standard (experimental)** (RL-interface, think-act
-loops), **Router Spec (experimental)** (deep-think-first, the long first-turn
+Restart DSH (the bundle patch is only read at startup), start a new session, and pick
+**Router Standard (experimental)** (RL-interface, think-act loops), **Router React**
+(think-act loop restoration) or **Router Spec (experimental)** (deep-think-first — the
+long first-turn chain is the point).
 chain is the point) or **Router Pro** (V4 Pro measured optimum).
 
 - `dev_router_status` — current mode, band, persona, core tools, override state

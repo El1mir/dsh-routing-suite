@@ -7,3 +7,9 @@ preset/probe/dsh-2020-dataset/
 preset/probe/results/
 preset/probe/sessions/
 preset/probe/deepseek-tokenizer/
+# agent 工作区（工单、派发记录等），不入库
+.scratch/
+# graphify 工具的索引/缓存输出，是派生产物，不入库
+graphify-out/
+# 注：guard/snapshot.json 刻意入库 —— 它记录"本机 harness 现在长什么样"，
+# 供 diff 审阅 harness 升级带来的接口变化。它不含时间戳与绝对路径，可跨机器复现。
